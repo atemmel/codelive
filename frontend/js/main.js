@@ -2,7 +2,7 @@ console.log("Script running");
 var ws = new WebSocket("ws://" + location.host + ":80/chat");
 
 function tick() {
-	ws.send("");
+	ws.send(null);
 }
 
 function type() {

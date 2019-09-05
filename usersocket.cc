@@ -1,7 +1,7 @@
 #include "usersocket.h"
 void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::string &&message, const WebSocketMessageType &type)
 {
-	if(message.empty() ) {
+	if(message == "null") {
 		std::cout << "Message empty, returning previous string\n";
 		wsConnPtr->send(_string);
 		return;
