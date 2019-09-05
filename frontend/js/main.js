@@ -1,20 +1,32 @@
 console.log("Script running");
+var ws = new WebSocket("ws://" + location.host + ":80/chat");
+
+function tick() {
+	ws.send("");
+}
+
+function type() {
+	ws.send(document.getElementById("input").value);
+}
 
 function setupListeners() {
-	document.getElementById("send").addEventListener("click", function() {
-		var ws = new WebSocket("ws://" + location.host + ":80/chat");
-
-		ws.onopen = (event) => {
-			console.log("Socket is open");
-			var contents = document.getElementById("input");
-			ws.send(contents.value);  // Sends a message.
-		};
-
-		ws.onmessage = (event) => {
-			console.log("Recieved message: " + event.data);
-		};
-	});
-}
+	ws.onopen = (event) => {
+		console.log("Socket is open");
+		var input = document.getElementById("input");
+		ws.send(input.value);  // Sends a message.
+	};
+	ws.onclose = (event) => {
+		console.log("Socket closed");
+	};
+	ws.onmessage = (event) => {
+		console.log("Recieved message: " + event.data);
+		var input = document.getElementById("input");
+		input.value = event.data;
+	};
+	setInterval(tick, 2000);
+	var input = document.getElementById("input");
+	input.addEventListener("input", type);
+};
 
 document.addEventListener("DOMContentLoaded", (event) => {
 	setupListeners();
