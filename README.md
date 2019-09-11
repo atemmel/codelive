@@ -49,5 +49,6 @@ cd codelive
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make && sudo ./clive &
+make
+sudo ./clive &
 ```
