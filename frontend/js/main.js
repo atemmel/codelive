@@ -1,7 +1,13 @@
 console.log("Script running");
 var ws = new WebSocket("ws://" + location.host + ":80/chat");
+var editor = null;
+var modified = false;
 
 function tick() {
+	if(modified) {
+		modified = false;
+		return;
+	}
 	var data = {
 		clear: true
 	};
@@ -9,10 +15,13 @@ function tick() {
 	ws.send(JSON.stringify(data) );
 }
 
-function type() {
+function type(delta) {
+	if(!modified) {
+		return;
+	}
 	var data = {
-		str: document.getElementById("input").value,
-		clear: false
+		clear: false,
+		str: editor.getValue()
 	};
 	console.log("Sending message: ", data);
 	ws.send(JSON.stringify(data) );
@@ -26,14 +35,23 @@ function setupListeners() {
 		console.log("🦀 Socket is gone! 🦀");
 	};
 	ws.onmessage = (event) => {
-		var input = document.getElementById("input");
-		if(event.data == null) return;
-		input.value = JSON.parse(event.data).str;
+		if(event.data == "null") return;
+		var message = JSON.parse(event.data);
+		modified = false;
+		editor.setValue(message.str);
+		editor.clearSelection();
 	};
-	setInterval(tick, 200);
-	var input = document.getElementById("input");
-	input.value = "";
-	input.addEventListener("input", type);
+	setInterval(tick, 1000);
+	editor = ace.edit("editor");
+	editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/c_cpp");
+	editor.addEventListener("change", type);
+
+	//lmao
+	//https://github.com/ajaxorg/ace/issues/211#issuecomment-2733468
+	document.getElementById("editor").firstChild.addEventListener("keydown", () => {
+		modified = true;
+	});
 };
 
 document.addEventListener("DOMContentLoaded", (event) => {

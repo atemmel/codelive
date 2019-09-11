@@ -4,6 +4,8 @@ using namespace drogon;
 class usersocket:public drogon::WebSocketController<usersocket>
 {
 public:
+	using Document = std::vector<std::string>;
+	usersocket();
     virtual void handleNewMessage(const WebSocketConnectionPtr&,
                                   std::string &&,
                                   const WebSocketMessageType &) override;
@@ -15,5 +17,7 @@ public:
     WS_PATH_ADD("/chat");
     WS_PATH_LIST_END
 private:
+		std::mutex _valueMutex;
 		Json::Value _value;
+		Document _document;
 };
