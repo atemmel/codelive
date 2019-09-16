@@ -1,13 +1,9 @@
 #include "usersocket.h"
 usersocket::usersocket() {
-	_value["str"] = "";
-	_value["clear"] = "false";
 }
 void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::string &&message, const WebSocketMessageType &type)
 {
-	if(message == "null") {
-		std::cout << "Message empty, returning previous string\n";
-		wsConnPtr->send("null");
+	if(message.empty() || message == "null") {
 		return;
 	}
 
@@ -30,29 +26,30 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 		builder["indentation"] = "";
 		reader.parse(message, value);
 
-		const Json::Value clear = value["clear"];
-		if(!clear.isBool() ) return;
-		if(clear.asBool() ) {
-			std::lock_guard<std::mutex> guard(_valueMutex);
-			const std::string output = Json::writeString(builder, _value);
-			wsConnPtr->send(output);
-			return;
+		std::cout << "Message recieved: " << message << '\n';
+
+		const Json::Value queue = value["queue"];
+		if(!queue.isArray() ) return;
+		
+		for(const auto &q : queue) {
+			//insertDelta
 		}
 
-		std::cout << "New message recieved: " << message << '\n';
+		for(const auto &client : _pool) {
+			if(client != wsConnPtr) {
+				client->send(message);
+			}
+		}
 
-		std::lock_guard<std::mutex> guard(_valueMutex);
-		std::swap(_value, value);
-		const std::string output = Json::writeString(builder, _value);
-		std::cout << "Data contained is now: " << output << '\n';
-		wsConnPtr->send("null");
 	} catch(Json::LogicError err) {
 		std::cout << err.what() << '\n';
 	}
 }
 void usersocket::handleNewConnection(const HttpRequestPtr &req,const WebSocketConnectionPtr& wsConnPtr)
 {
+	_pool.insert(wsConnPtr);
 	std::cout << "New connection established\n";
+	std::cout << _pool.size() << " connections\n";
 	Json::StreamWriterBuilder builder;
 	builder["indentation"] = "";
 	std::lock_guard<std::mutex> guard(_valueMutex);
@@ -61,5 +58,7 @@ void usersocket::handleNewConnection(const HttpRequestPtr &req,const WebSocketCo
 }
 void usersocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)
 {
+	_pool.erase(wsConnPtr);
 	std::cout << "Connection terminated\n";
+	std::cout << _pool.size() << " connections\n";
 }

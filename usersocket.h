@@ -17,6 +17,8 @@ public:
     WS_PATH_ADD("/chat");
     WS_PATH_LIST_END
 private:
+		using Pool = std::set<WebSocketConnectionPtr>;
+		Pool _pool;
 		std::mutex _valueMutex;
 		Json::Value _value;
 		Document _document;
