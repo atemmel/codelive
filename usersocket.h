@@ -22,4 +22,7 @@ private:
 		std::mutex _valueMutex;
 		Json::Value _value;
 		Document _document;
+
+		bool _running;
+		std::mutex _runningMutex;
 };

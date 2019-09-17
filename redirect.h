@@ -4,6 +4,7 @@
 #include <string>
 
 void redirect(const std::string &call, const std::string &fout, const std::string &ferr) {
+	printf("Attempting to execute: %s", call.c_str() );
 	int out = open(fout.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
 	int err = open(ferr.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
 	if(-1 == err || -1 == out) { 

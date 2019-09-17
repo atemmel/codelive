@@ -31,10 +31,6 @@ function type(delta) {
 	queue.push(delta);
 }
 
-function max(a, b) {
-	return a > b ? a : b;
-}
-
 function applyChanges(changes) {
 	editor.setReadOnly(true);
 	var cursor = editor.selection.getCursor();
@@ -75,6 +71,15 @@ function applyChanges(changes) {
 	editor.setReadOnly(false);
 }
 
+function applyState(state) {
+	if(state == "halted") {
+		editor.setReadOnly(true);
+	}
+	else if(state == "normal") {
+		editor.setReadOnly(false);
+	}
+}
+
 function setupListeners() {
 	ws.onopen = (event) => {
 		console.log("Socket is open");
@@ -88,15 +93,11 @@ function setupListeners() {
 
 		var message = JSON.parse(event.data);
 		console.log("Message recieved: ", message);
-		applyChanges(message.queue);
-
-		/*
-		if(message.str == editor.getValue() ) return;
-		modified = false;
-		editor.setValue(message.str);
-		editor.clearSelection();
-		editor.gotoLine(cursor);
-		*/
+		if(message.queue) applyChanges(message.queue);
+		else if(message.state) {
+			applyState(message.state);
+			document.getElementById("output").innerHTML = message.result;
+		}
 	};
 	setInterval( () => {
 		if(ws.readyState == ws.OPEN) {
@@ -109,7 +110,15 @@ function setupListeners() {
 	editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/c_cpp");
 	editor.addEventListener("change", type);
-	//cursor = editor.selection.getCursor();
+
+	document.getElementById("run").addEventListener("click", () => {
+		var val = {
+			run: true,
+			contents: editor.getValue()
+		};
+
+		ws.send(JSON.stringify(val) );
+	});
 
 	//lmao
 	//https://github.com/ajaxorg/ace/issues/211#issuecomment-2733468
