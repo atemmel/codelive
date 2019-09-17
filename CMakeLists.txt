@@ -57,3 +57,4 @@ endforeach()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(clive ${SRC_DIR} ${CTL_SRC} ${FILTER_SRC} ${VIEWSRC} ${PLUGIN_SRC} ${MODEL_SRC})
+target_link_libraries(clive stdc++fs)
