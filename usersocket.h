@@ -1,10 +1,11 @@
 #pragma once
 #include <drogon/WebSocketController.h>
+#include "mutextype.h"
 using namespace drogon;
 class usersocket:public drogon::WebSocketController<usersocket>
 {
 public:
-	using Document = std::vector<std::string>;
+	//using Document = std::vector<std::string>;
 	usersocket();
     virtual void handleNewMessage(const WebSocketConnectionPtr&,
                                   std::string &&,
@@ -21,8 +22,9 @@ private:
 		Pool _pool;
 		std::mutex _valueMutex;
 		Json::Value _value;
-		Document _document;
+		std::string _document;
 
 		bool _running;
 		std::mutex _runningMutex;
+		MutexType<std::string> _doc;
 };

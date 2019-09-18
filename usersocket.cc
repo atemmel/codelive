@@ -1,6 +1,7 @@
 #include "usersocket.h"
 #include "redirect.h"
 #include <fstream>
+#include <algorithm>
 #include <filesystem>
 usersocket::usersocket() {
 }
@@ -10,12 +11,36 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 		return;
 	}
 
-	/*
-	 *	Insert changes incrementally instead of fetching the entire string
-	auto insertDelta = [&](const std::string &str, int col, int row) {
-		
+	//Insert changes incrementally instead of fetching the entire string
+	auto insertDelta = [&](const std::string &str, const int col, const int row) {
+		int currentRow = 0;
+		int currentCol = 0;
+
+		auto ins = [&](auto it){
+			if(currentCol == col && currentRow == row) {
+				if(str.empty() ) {
+					_document.insert(it, '\n');
+				} else {
+					_document.insert(it, str.front() );
+				}
+				std::cout << "Document:\n" << _document << '\n';
+				return;
+			}
+		};
+
+		for(auto it = _document.begin(); it != _document.end(); it++) {
+			ins(it);
+			if(*it == '\n') {
+				++currentRow;
+			}
+			++currentCol;
+		}
+
+		ins(_document.end() );
+
+		std::cout << "Row: " << row << " Col:" << col << '\n';
+		std::cout << "CRow: " << currentRow << " CCol:" << currentCol << '\n';
 	};
-	*/
 
 	auto distributeOthers = [&](const std::string &msg) {
 		for(const auto &client : _pool) {
@@ -95,12 +120,11 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 		const Json::Value queue = value["queue"];
 		if(queue.isArray() ) {
 
-			/*
-			 * Insert changes incrementally
+			//Insert changes incrementally
 			for(const auto &q : queue) {
-				insertDelta(q)
+				const Json::Value start = q["start"];
+				insertDelta(q["lines"][0].asString(), start["column"].asInt(), start["row"].asInt() );
 			}
-			*/
 			std::cout << "Queue is array" << '\n';
 
 			distributeOthers(message);
