@@ -12,35 +12,6 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 	}
 
 	//Insert changes incrementally instead of fetching the entire string
-	auto insertDelta = [&](const std::string &str, const int col, const int row) {
-		int currentRow = 0;
-		int currentCol = 0;
-
-		auto ins = [&](auto it){
-			if(currentCol == col && currentRow == row) {
-				if(str.empty() ) {
-					_document.insert(it, '\n');
-				} else {
-					_document.insert(it, str.front() );
-				}
-				std::cout << "Document:\n" << _document << '\n';
-				return;
-			}
-		};
-
-		for(auto it = _document.begin(); it != _document.end(); it++) {
-			ins(it);
-			if(*it == '\n') {
-				++currentRow;
-			}
-			++currentCol;
-		}
-
-		ins(_document.end() );
-
-		std::cout << "Row: " << row << " Col:" << col << '\n';
-		std::cout << "CRow: " << currentRow << " CCol:" << currentCol << '\n';
-	};
 
 	auto distributeOthers = [&](const std::string &msg) {
 		for(const auto &client : _pool) {
@@ -123,7 +94,23 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 			//Insert changes incrementally
 			for(const auto &q : queue) {
 				const Json::Value start = q["start"];
-				insertDelta(q["lines"][0].asString(), start["column"].asInt(), start["row"].asInt() );
+				const Json::Value end = q["end"];
+				const Json::Value action = q["action"];
+				Document::DiffType type = Document::DiffType::Insert;
+				if(action.asString() == "delete") {
+					type = Document::DiffType::Delete;
+				} else if(action.asString() == "remove") {
+					type = Document::DiffType::Remove;
+				}
+
+				Document::Delta delta {
+					{ start["column"].asInt(), start["row"].asInt() },
+					{ end["column"].asInt(), end["row"].asInt() },
+					q["lines"][0].asString(),
+					type
+				};
+
+				_doc.data.apply(delta);
 			}
 			std::cout << "Queue is array" << '\n';
 
