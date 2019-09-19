@@ -28,6 +28,8 @@ class Builder {
 public:
 	void apply(const Delta &delta);
 
+	bool save(const std::string &path) const;
+
 	const std::string &str() const;
 private:
 	std::string _str;

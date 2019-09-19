@@ -98,6 +98,11 @@ function setupListeners() {
 			applyState(message.state);
 			document.getElementById("output").innerHTML = message.result;
 		}
+		else if(message.str) {
+			editor.setValue(message.str);
+			editor.session.getUndoManager().$undoStack.pop();
+			editor.clearSelection();
+		}
 	};
 	setInterval( () => {
 		if(ws.readyState == ws.OPEN) {

@@ -36,8 +36,8 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 	};
 
 	auto run = [&](const Json::Value &var) {
-		std::lock_guard<std::mutex> guard(_runningMutex);
-		_running = true;
+		std::lock_guard<std::mutex> guard(_running.mutex);
+		_running.data = true;
 
 		Json::Value mess;
 		Json::StreamWriterBuilder builder;
@@ -75,7 +75,7 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 		} else std::cout << "File did not open\n";
 			
 
-		_running = false;
+		_running.data = false;
 	};
 
 	try {
@@ -119,7 +119,7 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 		}
 
 		const Json::Value requestRun = value["run"];
-		if(requestRun.isBool() && !_running) {
+		if(requestRun.isBool() && !_running.data) {
 			run(value);
 			return;
 		}
@@ -135,8 +135,9 @@ void usersocket::handleNewConnection(const HttpRequestPtr &req,const WebSocketCo
 	std::cout << _pool.size() << " connections\n";
 	Json::StreamWriterBuilder builder;
 	builder["indentation"] = "";
-	std::lock_guard<std::mutex> guard(_valueMutex);
-	const std::string output = Json::writeString(builder, _value);
+	std::lock_guard<std::mutex> guard(_value.mutex);
+	_value.data["str"] = _doc.data.str();
+	const std::string output = Json::writeString(builder, _value.data);
 	wsConnPtr->send(output);
 }
 void usersocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)

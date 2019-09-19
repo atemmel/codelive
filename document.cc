@@ -33,7 +33,7 @@ void Builder::apply(const Delta &delta) {
 			} else {
 				return;
 			}
-		} else {
+		} else if(delta.type == DiffType::Insert) {
 			_str.insert(it, delta.content.front() );
 		}
 		std::cout << "Document:\n" << _str << '\n';

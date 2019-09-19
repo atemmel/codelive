@@ -20,10 +20,14 @@ public:
 private:
 		using Pool = std::set<WebSocketConnectionPtr>;
 		Pool _pool;
+		/*
 		std::mutex _valueMutex;
 		Json::Value _value;
 
 		bool _running;
 		std::mutex _runningMutex;
+		*/
+		MutexType<Json::Value> _value;
+		MutexType<bool> _running;
 		MutexType<Document::Builder> _doc;
 };
