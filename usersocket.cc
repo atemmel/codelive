@@ -36,7 +36,7 @@ void usersocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::
 	};
 
 	auto run = [&](const Json::Value &var) {
-		std::lock_guard<std::mutex> guard(_running.mutex);
+		Guard guard(_running);
 		_running.data = true;
 
 		Json::Value mess;
@@ -135,7 +135,7 @@ void usersocket::handleNewConnection(const HttpRequestPtr &req,const WebSocketCo
 	std::cout << _pool.size() << " connections\n";
 	Json::StreamWriterBuilder builder;
 	builder["indentation"] = "";
-	std::lock_guard<std::mutex> guard(_value.mutex);
+	Guard guard(_value);
 	_value.data["str"] = _doc.data.str();
 	const std::string output = Json::writeString(builder, _value.data);
 	wsConnPtr->send(output);
